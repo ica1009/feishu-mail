@@ -11,7 +11,12 @@
 - ✅ **公共邮箱管理**：公共邮箱的完整生命周期管理
 - ✅ **用户邮箱管理**：用户邮箱地址、别名、密码管理
 - ✅ **邮件查询**：获取邮件列表、查询邮件详情
+- ✅ **发送邮件**：发送邮件功能
 - ✅ **附件管理**：获取附件信息、获取附件下载链接
+- ✅ **邮箱文件夹管理**：创建、删除、修改、列出文件夹
+- ✅ **邮箱联系人管理**：创建、更新、删除、查询联系人
+- ✅ **事件订阅**：订阅邮件事件、获取订阅状态、取消订阅
+- ✅ **收信规则**：创建、更新、删除、查询收信规则
 - ✅ **类型安全**：完整的Go类型定义
 - ✅ **错误处理**：统一的错误处理机制
 
@@ -192,6 +197,114 @@ if err != nil {
 fmt.Printf("附件名称: %s, 大小: %d 字节\n", attachment.Name, attachment.Size)
 ```
 
+### 6. 发送邮件示例
+
+```go
+// 发送邮件
+sendReq := usermailbox.SendMailRequest{
+    To:      []string{"recipient@example.com"},
+    Subject: "测试邮件",
+    Body:    "这是一封测试邮件",
+    BodyHTML: "<p>这是一封测试邮件</p>",
+}
+messageID, err := usermailbox.SendMail(client, "me", sendReq)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("邮件发送成功，ID: %s\n", messageID)
+```
+
+### 7. 邮箱文件夹管理示例
+
+```go
+// 创建文件夹
+folderReq := usermailbox.CreateFolderRequest{
+    Name: "重要邮件",
+}
+folder, err := usermailbox.CreateFolder(client, "me", folderReq)
+if err != nil {
+    log.Fatal(err)
+}
+
+// 列出所有文件夹
+folders, err := usermailbox.ListFolders(client, "me", usermailbox.ListFoldersRequest{})
+if err != nil {
+    log.Fatal(err)
+}
+for _, f := range folders.Items {
+    fmt.Printf("文件夹: %s (ID: %s)\n", f.Name, f.FolderID)
+}
+```
+
+### 8. 邮箱联系人管理示例
+
+```go
+// 创建联系人
+contactReq := usermailbox.CreateContactRequest{
+    Name:  "张三",
+    Email: "zhangsan@example.com",
+}
+contact, err := usermailbox.CreateContact(client, "me", contactReq)
+if err != nil {
+    log.Fatal(err)
+}
+
+// 列出联系人
+contacts, err := usermailbox.ListContacts(client, "me", usermailbox.ListContactsRequest{
+    PageSize: 20,
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### 9. 事件订阅示例
+
+```go
+// 订阅收信事件
+eventReq := usermailbox.SubscribeEventRequest{
+    EventTypes: []string{usermailbox.EventTypeReceiveMail},
+    WebhookURL: "https://your-webhook-url.com/callback",
+}
+subscription, err := usermailbox.SubscribeEvent(client, "me", eventReq)
+if err != nil {
+    log.Fatal(err)
+}
+
+// 获取订阅状态
+status, err := usermailbox.GetSubscriptionStatus(client, "me", subscription.SubscriptionID)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### 10. 收信规则示例
+
+```go
+// 创建收信规则（自动将来自特定发件人的邮件移动到指定文件夹）
+ruleReq := usermailbox.CreateReceiveRuleRequest{
+    Name: "重要发件人规则",
+    Conditions: []usermailbox.Condition{
+        {
+            Field:    "FROM",
+            Operator: "CONTAINS",
+            Value:    "important@example.com",
+        },
+    },
+    Actions: []usermailbox.Action{
+        {
+            Type:      "MOVE_TO_FOLDER",
+            Parameter: "folder_id_123",
+        },
+    },
+    IsEnabled: true,
+}
+rule, err := usermailbox.CreateReceiveRule(client, "me", ruleReq)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
 ## API模块
 
 ### 邮件组 (mailgroup)
@@ -213,7 +326,12 @@ fmt.Printf("附件名称: %s, 大小: %d 字节\n", attachment.Name, attachment.
 - `alias.go` - 别名管理
 - `password.go` - 密码管理
 - `message.go` - 邮件查询（获取邮件列表、邮件详情）
+- `send.go` - 发送邮件
 - `attachment.go` - 附件管理（获取附件信息、下载链接）
+- `folder.go` - 邮箱文件夹管理（创建、删除、修改、列出）
+- `contact.go` - 邮箱联系人管理（创建、更新、删除、查询）
+- `event.go` - 事件订阅管理（订阅、获取状态、取消订阅）
+- `rule.go` - 收信规则管理（创建、更新、删除、查询）
 
 ## 错误处理
 
