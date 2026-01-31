@@ -10,6 +10,8 @@
 - ✅ **邮件组权限管理**：权限成员的完整管理
 - ✅ **公共邮箱管理**：公共邮箱的完整生命周期管理
 - ✅ **用户邮箱管理**：用户邮箱地址、别名、密码管理
+- ✅ **邮件查询**：获取邮件列表、查询邮件详情
+- ✅ **附件管理**：获取附件信息、获取附件下载链接
 - ✅ **类型安全**：完整的Go类型定义
 - ✅ **错误处理**：统一的错误处理机制
 
@@ -137,6 +139,59 @@ if err != nil {
 }
 ```
 
+### 5. 邮件查询和附件操作示例
+
+```go
+import "github.com/ica1009/feishu-mail/usermailbox"
+
+// 获取邮件列表（收件箱）
+listReq := usermailbox.ListMessagesRequest{
+    FolderID: "inbox",  // 收件箱
+    PageSize: 20,
+}
+messages, err := usermailbox.ListMessages(client, "me", listReq)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("找到 %d 封邮件\n", len(messages.Items))
+
+// 获取邮件详情
+message, err := usermailbox.GetMessage(client, "me", "message_id_123", true)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("邮件主题: %s\n", message.Subject)
+fmt.Printf("发件人: %s\n", message.From)
+
+// 获取附件下载链接
+attachmentIDs := []string{"attachment_id_1", "attachment_id_2"}
+downloadURLs, err := usermailbox.GetAttachmentDownloadURL(
+    client, 
+    "me", 
+    "message_id_123", 
+    attachmentIDs,
+)
+if err != nil {
+    log.Fatal(err)
+}
+for _, item := range downloadURLs {
+    fmt.Printf("附件 %s 下载链接: %s\n", item.AttachmentID, item.DownloadURL)
+    // 注意：下载链接仅可使用两次，有效期两小时
+}
+
+// 获取附件信息
+attachment, err := usermailbox.GetAttachmentInfo(
+    client,
+    "me",
+    "message_id_123",
+    "attachment_id_1",
+)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("附件名称: %s, 大小: %d 字节\n", attachment.Name, attachment.Size)
+```
+
 ## API模块
 
 ### 邮件组 (mailgroup)
@@ -157,6 +212,8 @@ if err != nil {
 - `address.go` - 地址管理
 - `alias.go` - 别名管理
 - `password.go` - 密码管理
+- `message.go` - 邮件查询（获取邮件列表、邮件详情）
+- `attachment.go` - 附件管理（获取附件信息、下载链接）
 
 ## 错误处理
 
